@@ -32,7 +32,7 @@ void main() {
 
       expect(responses, isNotEmpty);
       expect(responses.first.text, isNotNull);
-      expect(responses.any((r) => r.text!.contains('OpenCode')), isTrue);
+      expect(responses.any((r) => r.text!.contains('Bou3orrif')), isTrue);
     });
 
     test('generateFreeModelResponse has smart responses', () async {
@@ -52,7 +52,7 @@ void main() {
       ]);
       final res2 = await stream2.toList();
       final text2 = res2.map((r) => r.text).join();
-      expect(text2, contains('AI programming assistant'));
+      expect(text2, contains('Bou3orrif'));
 
       // Test bug response
       final service3 = GeminiService()..initialize('free');
@@ -65,7 +65,7 @@ void main() {
     });
   });
 
-  group('SettingsProvider Free Mode Tests', () {
+  group('SettingsProvider Free Mode & Model Tests', () {
     test('setFreeMode stores key and notifies', () async {
       final settings = SettingsProvider();
       bool notified = false;
@@ -76,10 +76,23 @@ void main() {
       await settings.setFreeMode();
 
       expect(settings.apiKey, equals('free'));
+      expect(settings.selectedModel, equals('big-pickle'));
       expect(notified, isTrue);
 
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getString('gemini_api_key'), equals('free'));
+      expect(prefs.getString('selected_model'), equals('big-pickle'));
+    });
+
+    test('setSelectedModel updates active model', () async {
+      final settings = SettingsProvider();
+      await settings.loadSettings();
+
+      await settings.setSelectedModel('minimax-m2.5-free');
+      expect(settings.selectedModel, equals('minimax-m2.5-free'));
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('selected_model'), equals('minimax-m2.5-free'));
     });
   });
 
@@ -109,8 +122,8 @@ void main() {
       // Check that apiKey is now 'free'
       expect(settings.apiKey, equals('free'));
 
-      // Verify navigation to home screen (which renders OpenCode Mobile app bar title)
-      expect(find.text('OpenCode Mobile'), findsOneWidget);
+      // Verify navigation to home screen (which renders Bou3orrif app bar title)
+      expect(find.text('Bou3orrif'), findsOneWidget);
     });
   });
 }

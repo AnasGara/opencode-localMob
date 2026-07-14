@@ -56,10 +56,10 @@ class _ChatScreenState extends State<ChatScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.terminal_rounded, size: 60, color: Colors.grey),
+                      Icon(Icons.psychology_rounded, size: 60, color: Colors.grey),
                       SizedBox(height: 12),
                       Text(
-                        'OpenCode AI Sandbox',
+                        'Bou3orrif AI Playground',
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey),
                       ),
                       SizedBox(height: 4),
@@ -140,7 +140,7 @@ class _ChatScreenState extends State<ChatScreen> {
             children: [
               Icon(isUser ? Icons.person_rounded : Icons.android_rounded, size: 14, color: Colors.grey),
               const SizedBox(width: 4),
-              Text(isUser ? 'You' : 'OpenCode', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+              Text(isUser ? 'You' : 'Bou3orrif', style: const TextStyle(fontSize: 11, color: Colors.grey)),
             ],
           ),
           const SizedBox(height: 4),
@@ -188,7 +188,7 @@ class _ChatScreenState extends State<ChatScreen> {
             child: TextField(
               controller: _inputController,
               decoration: const InputDecoration(
-                hintText: 'Ask a coding question...',
+                hintText: 'Ask Bou3orrif anything...',
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.symmetric(horizontal: 12),
               ),

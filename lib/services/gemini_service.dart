@@ -5,10 +5,12 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 class GeminiService {
   GenerativeModel? _model;
   bool _isFreeMode = false;
+  String _modelName = 'gemini-2.0-flash';
 
   bool get isInitialized => _model != null || _isFreeMode;
 
-  void initialize(String apiKey) {
+  void initialize(String apiKey, {String? modelName}) {
+    _modelName = modelName ?? (apiKey == 'free' ? 'big-pickle' : 'gemini-2.0-flash');
     if (apiKey == 'free') {
       _isFreeMode = true;
       _model = null;
@@ -16,17 +18,17 @@ class GeminiService {
     }
     _isFreeMode = false;
     _model = GenerativeModel(
-      model: 'gemini-2.0-flash',
+      model: _modelName,
       apiKey: apiKey,
       generationConfig: GenerationConfig(
         responseMimeType: 'text/plain',
       ),
       systemInstruction: Content.system(
-        "You are OpenCode, an expert AI programming assistant running inside a Flutter mobile app. "
-        "Your task is to help the user write, debug, explain, and optimize code. "
+        "You are Bou3orrif, a polyvalent and intelligent AI assistant running inside a Flutter mobile app. "
+        "Your task is to help the user with any tasks they have, including general knowledge questions, writing, debugging, explaining, and optimizing code. "
         "The user can browse their local files and attach them to the chat context. "
-        "Keep explanations clear and focused on working code. "
-        "Always use proper Markdown formatting, and wrap code blocks in appropriate language tags (e.g. ```dart, ```yaml, etc.)."
+        "Keep explanations clear, engaging, and precise. "
+        "Always use proper Markdown formatting, and wrap code blocks in appropriate language tags if outputting code."
       ),
     );
   }
@@ -78,7 +80,7 @@ class GeminiService {
       }
 
       final body = {
-        'model': 'big-pickle',
+        'model': _modelName,
         'messages': messages,
         'stream': true,
       };
@@ -155,8 +157,8 @@ class GeminiService {
     final promptLower = userPrompt.toLowerCase();
 
     if (promptLower.contains('hello') || promptLower.contains('hi')) {
-      return "Hello! I am OpenCode, your AI programming assistant running on a free, lightweight local offline model. "
-             "How can I help you with your coding, debugging, or project architecture tasks today?";
+      return "Hello! I am Bou3orrif, your polyvalent AI assistant running on a free, lightweight local offline model ($_modelName). "
+             "How can I help you today? I can help you with general knowledge questions, writing, brainstorming, or coding!";
     }
 
     if (promptLower.contains('bug') || promptLower.contains('error') || promptLower.contains('debug') || promptLower.contains('fail')) {
@@ -170,11 +172,11 @@ class GeminiService {
 
     if (promptLower.contains('explain') || promptLower.contains('how') || promptLower.contains('what')) {
       return "### Explanation and Best Practices\n\n"
-             "When designing clean, maintainable code, consider the following principles:\n"
-             "- **Single Responsibility**: Every class and function should do exactly one thing well.\n"
-             "- **Declarative UI**: In Flutter, state determines your UI (`UI = f(state)`). Avoid direct state mutations.\n"
-             "- **Composition over Inheritance**: Build complex widgets and classes using smaller, reusable blocks.\n\n"
-             "If you have a specific file or snippet you would like me to explain, select it from your file browser and let me know!";
+             "When designing clean, maintainable systems, consider the following principles:\n"
+             "- **Clarity**: Keep your logic clear, structured, and easy to understand.\n"
+             "- **Separation of Concerns**: Separate your logic layers so that changes in one place do not break others.\n"
+             "- **Iterative Design**: Build complex systems using smaller, thoroughly tested parts.\n\n"
+             "Let me know if you have a specific topic or file you would like me to explain!";
     }
 
     if (promptLower.contains('code') || promptLower.contains('write') || promptLower.contains('implement') || promptLower.contains('create') || promptLower.contains('make')) {
@@ -195,7 +197,7 @@ class GeminiService {
              "    // Simulate network delay\n"
              "    await Future.delayed(const Duration(seconds: 2));\n"
              "    setState(() {\n"
-             "      _data = \"Hello from the Free Offline Model!\";\n"
+             "      _data = \"Hello from the Free Offline Model ($_modelName)!\";\n"
              "      _isLoading = false;\n"
              "    });\n"
              "  }\n\n"
@@ -223,9 +225,9 @@ class GeminiService {
     }
 
     // Default general response
-    return "Thank you for reaching out! I am OpenCode, running in **Free Offline Mode** (no Gemini API key required).\n\n"
-           "I can help you build, explain, and debug applications right from your mobile device. "
+    return "Thank you for reaching out! I am Bou3orrif, running in **Free Offline Mode** with model `$_modelName` (no Gemini API key required).\n\n"
+           "I am a polyvalent assistant here to help with all of your general tasks, writing, research, and analysis. "
            "You can also attach any local files from your workspace using the folder/browser tab.\n\n"
-           "Feel free to ask specific coding questions or paste your scripts here!";
+           "Feel free to ask me anything!";
   }
 }

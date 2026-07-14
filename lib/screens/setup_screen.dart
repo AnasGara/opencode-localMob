@@ -75,7 +75,7 @@ class _SetupScreenState extends State<SetupScreen> {
               const Icon(Icons.code_rounded, size: 80, color: Colors.deepPurple),
               const SizedBox(height: 16),
               const Text(
-                'OpenCode Mobile',
+                'Bou3orrif',
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
