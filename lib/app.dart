@@ -12,7 +12,7 @@ class OpenCodeApp extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, _) {
         return MaterialApp(
-          title: 'OpenCode Mobile',
+          title: 'Bou3orrif',
           debugShowCheckedModeBanner: false,
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(

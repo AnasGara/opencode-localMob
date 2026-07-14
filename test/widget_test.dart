@@ -16,6 +16,6 @@ void main() {
         child: const OpenCodeApp(),
       ),
     );
-    expect(find.text('OpenCode Mobile'), findsOneWidget);
+    expect(find.text('Bou3orrif'), findsOneWidget);
   });
 }
