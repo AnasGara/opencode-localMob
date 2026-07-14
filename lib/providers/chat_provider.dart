@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import '../models/chat_message.dart';
@@ -21,14 +22,18 @@ class ChatProvider with ChangeNotifier {
     required String text,
     String? attachedFileName,
     String? attachedFileContent,
+    Uint8List? attachedFileBytes,
+    String? attachedFileMimeType,
   }) async {
-    if (text.trim().isEmpty && attachedFileContent == null) return;
+    if (text.trim().isEmpty && attachedFileContent == null && attachedFileBytes == null) return;
 
     final userMessage = ChatMessage(
       role: MessageRole.user,
       text: text,
       attachedFileName: attachedFileName,
       attachedFileContent: attachedFileContent,
+      attachedFileBytes: attachedFileBytes,
+      attachedFileMimeType: attachedFileMimeType,
     );
 
     _messages.add(userMessage);
@@ -48,7 +53,14 @@ class ChatProvider with ChangeNotifier {
         }
 
         if (msg.role == MessageRole.user) {
-          apiHistory.add(Content.text(contentText));
+          if (msg.attachedFileBytes != null && msg.attachedFileMimeType != null) {
+            apiHistory.add(Content.multi([
+              DataPart(msg.attachedFileMimeType!, msg.attachedFileBytes!),
+              TextPart(contentText.isEmpty ? "Analyze this file" : contentText),
+            ]));
+          } else {
+            apiHistory.add(Content.text(contentText));
+          }
         } else {
           apiHistory.add(Content.model([TextPart(msg.text)]));
         }

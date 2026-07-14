@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'dart:typed_data';
 import '../models/file_node.dart';
 import '../services/file_service.dart';
 
@@ -11,6 +12,8 @@ class ProjectProvider with ChangeNotifier {
 
   String? _selectedFilePath;
   String? _selectedFileContent;
+  Uint8List? _selectedFileBytes;
+  String? _selectedFileMimeType;
 
   String? get projectPath => _projectPath;
   FileNode? get rootNode => _rootNode;
@@ -18,6 +21,8 @@ class ProjectProvider with ChangeNotifier {
 
   String? get selectedFilePath => _selectedFilePath;
   String? get selectedFileContent => _selectedFileContent;
+  Uint8List? get selectedFileBytes => _selectedFileBytes;
+  String? get selectedFileMimeType => _selectedFileMimeType;
 
   Future<void> openProject() async {
     _isLoading = true;
@@ -69,15 +74,52 @@ class ProjectProvider with ChangeNotifier {
     }
   }
 
+  String? _getMimeType(String filePath) {
+    final extension = filePath.split('.').last.toLowerCase();
+    switch (extension) {
+      case 'png': return 'image/png';
+      case 'jpg':
+      case 'jpeg': return 'image/jpeg';
+      case 'webp': return 'image/webp';
+      case 'gif': return 'image/gif';
+      case 'mp4': return 'video/mp4';
+      case 'mov': return 'video/quicktime';
+      case 'webm': return 'video/webm';
+      case 'avi': return 'video/x-msvideo';
+      case 'pdf': return 'application/pdf';
+      case 'txt': return 'text/plain';
+      case 'dart': return 'text/x-dart';
+      case 'yaml': return 'text/x-yaml';
+      case 'json': return 'application/json';
+      default: return null;
+    }
+  }
+
+  bool _isBinaryFile(String filePath) {
+    final mime = _getMimeType(filePath);
+    if (mime == null) return false;
+    return mime.startsWith('image/') || mime.startsWith('video/') || mime == 'application/pdf';
+  }
+
   Future<void> selectFile(String filePath) async {
     _isLoading = true;
     _selectedFilePath = filePath;
     _selectedFileContent = null;
+    _selectedFileBytes = null;
+    _selectedFileMimeType = _getMimeType(filePath);
     notifyListeners();
 
     try {
-      final content = await _fileService.readFileContent(filePath);
-      _selectedFileContent = content;
+      final file = File(filePath);
+      if (await file.exists()) {
+        final isBinary = _isBinaryFile(filePath);
+        if (isBinary) {
+          _selectedFileBytes = await file.readAsBytes();
+          _selectedFileContent = "[Attached Media File: ${filePath.split(Platform.pathSeparator).last}]";
+        } else {
+          _selectedFileContent = await file.readAsString();
+        }
+      }
     } catch (e) {
       _selectedFileContent = "Error reading file: $e";
     } finally {
@@ -86,11 +128,21 @@ class ProjectProvider with ChangeNotifier {
     }
   }
 
+  void clearSelectedFile() {
+    _selectedFilePath = null;
+    _selectedFileContent = null;
+    _selectedFileBytes = null;
+    _selectedFileMimeType = null;
+    notifyListeners();
+  }
+
   void closeProject() {
     _projectPath = null;
     _rootNode = null;
     _selectedFilePath = null;
     _selectedFileContent = null;
+    _selectedFileBytes = null;
+    _selectedFileMimeType = null;
     notifyListeners();
   }
 }
