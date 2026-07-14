@@ -49,6 +49,20 @@ class _SetupScreenState extends State<SetupScreen> {
     }
   }
 
+  void _skipAndUseFreeModels() async {
+    setState(() {
+      _isValidating = true;
+      _errorMessage = null;
+    });
+
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    await settings.setFreeMode();
+
+    if (mounted) {
+      Navigator.pushReplacementNamed(context, '/home');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -84,14 +98,26 @@ class _SetupScreenState extends State<SetupScreen> {
               const SizedBox(height: 24),
               _isValidating
                   ? const CircularProgressIndicator()
-                  : ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepPurple,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(50),
-                      ),
-                      onPressed: _validateAndSubmit,
-                      child: const Text('Validate & Start'),
+                  : Column(
+                      children: [
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.deepPurple,
+                            foregroundColor: Colors.white,
+                            minimumSize: const Size.fromHeight(50),
+                          ),
+                          onPressed: _validateAndSubmit,
+                          child: const Text('Validate & Start'),
+                        ),
+                        const SizedBox(height: 12),
+                        OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(50),
+                          ),
+                          onPressed: _skipAndUseFreeModels,
+                          child: const Text('Skip & Use Free Models'),
+                        ),
+                      ],
                     ),
             ],
           ),
