@@ -14,7 +14,7 @@ class GeminiService {
     }
     _isFreeMode = false;
     _model = GenerativeModel(
-      model: 'gemini-2.0-flash',
+      model: 'gemini-3.5-flash',
       apiKey: apiKey,
       generationConfig: GenerationConfig(
         responseMimeType: 'text/plain',
