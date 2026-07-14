@@ -28,6 +28,13 @@ class SettingsProvider with ChangeNotifier {
     return false;
   }
 
+  Future<void> setFreeMode() async {
+    _apiKey = 'free';
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('gemini_api_key', 'free');
+    notifyListeners();
+  }
+
   Future<void> clearApiKey() async {
     _apiKey = null;
     final prefs = await SharedPreferences.getInstance();
