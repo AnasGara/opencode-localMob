@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'dart:convert';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
 class GeminiService {
@@ -50,6 +52,82 @@ class GeminiService {
   }
 
   Stream<GenerateContentResponse> _getFreeModelResponseStream(List<Content> history) async* {
+    try {
+      final client = HttpClient();
+      // Set a reasonable timeout for the connection
+      client.connectionTimeout = const Duration(seconds: 5);
+      final request = await client.postUrl(Uri.parse('https://opencode.ai/zen/v1/chat/completions'));
+      request.headers.contentType = ContentType.json;
+
+      // Construct OpenAI compatible messages from history
+      final messages = <Map<String, String>>[];
+      messages.add({
+        'role': 'system',
+        'content': "You are OpenCode, an expert AI programming assistant running inside a Flutter mobile app. "
+                   "Your task is to help the user write, debug, explain, and optimize code."
+      });
+
+      for (var content in history) {
+        if (content.parts.isEmpty) continue;
+        final part = content.parts.first;
+        if (part is TextPart) {
+          final text = part.text;
+          final role = content.role == 'user' ? 'user' : 'assistant';
+          messages.add({'role': role, 'content': text});
+        }
+      }
+
+      final body = {
+        'model': 'big-pickle',
+        'messages': messages,
+        'stream': true,
+      };
+
+      request.write(jsonEncode(body));
+      final response = await request.close();
+
+      if (response.statusCode == 200) {
+        // Stream the response chunks
+        final stream = response.transform(utf8.decoder).transform(const LineSplitter());
+        bool yieldedAnything = false;
+        await for (final line in stream) {
+          if (line.startsWith('data: ')) {
+            final dataStr = line.substring(6).trim();
+            if (dataStr == '[DONE]') continue;
+            try {
+              final data = jsonDecode(dataStr) as Map<String, dynamic>;
+              final choices = data['choices'] as List<dynamic>?;
+              if (choices != null && choices.isNotEmpty) {
+                final delta = choices.first['delta'] as Map<String, dynamic>?;
+                if (delta != null && delta.containsKey('content')) {
+                  final textChunk = delta['content'] as String;
+                  if (textChunk.isNotEmpty) {
+                    yieldedAnything = true;
+                    yield GenerateContentResponse([
+                      Candidate(
+                        Content.text(textChunk),
+                        null,
+                        null,
+                        null,
+                        null,
+                      )
+                    ], null);
+                  }
+                }
+              }
+            } catch (_) {
+              // Ignore partial JSON parse errors on invalid chunks
+            }
+          }
+        }
+        client.close();
+        if (yieldedAnything) return;
+      }
+      client.close();
+    } catch (_) {
+      // Fallback to local offline mock model
+    }
+
     final lastContent = history.isNotEmpty ? history.last : null;
     final lastMessage = (lastContent != null && lastContent.parts.isNotEmpty)
         ? (lastContent.parts.first as TextPart).text
