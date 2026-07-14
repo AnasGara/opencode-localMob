@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 enum MessageRole { user, model }
 
 class ChatMessage {
@@ -6,6 +8,8 @@ class ChatMessage {
   final DateTime timestamp;
   final String? attachedFileName;
   final String? attachedFileContent;
+  final Uint8List? attachedFileBytes;
+  final String? attachedFileMimeType;
 
   ChatMessage({
     required this.role,
@@ -13,5 +17,7 @@ class ChatMessage {
     DateTime? timestamp,
     this.attachedFileName,
     this.attachedFileContent,
+    this.attachedFileBytes,
+    this.attachedFileMimeType,
   }) : timestamp = timestamp ?? DateTime.now();
 }

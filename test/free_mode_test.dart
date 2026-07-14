@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'dart:typed_data';
 import 'package:opencodemobile/providers/settings_provider.dart';
 import 'package:opencodemobile/providers/chat_provider.dart';
 import 'package:opencodemobile/providers/project_provider.dart';
@@ -62,6 +63,24 @@ void main() {
       final res3 = await stream3.toList();
       final text3 = res3.map((r) => r.text).join();
       expect(text3, contains("Let's debug this issue"));
+    });
+
+    test('sendMessageStream parses multimodal content with DataParts in free mode', () async {
+      final service = GeminiService();
+      service.initialize('free');
+
+      final binaryBytes = Uint8List.fromList([1, 2, 3, 4]);
+      final stream = service.sendMessageStream([
+        Content.multi([
+          DataPart('image/png', binaryBytes),
+          TextPart('Describe this image please')
+        ])
+      ]);
+
+      final responses = await stream.toList();
+      expect(responses, isNotEmpty);
+      final fullText = responses.map((r) => r.text).join();
+      expect(fullText, contains('Bou3orrif'));
     });
   });
 
