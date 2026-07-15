@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/chat_provider.dart';
 import 'chat_screen.dart';
-import 'file_browser_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,13 +12,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0;
-
-  final List<Widget> _tabs = const [
-    ChatScreen(),
-    FileBrowserScreen(),
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -240,26 +232,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _tabs,
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat_bubble_outline),
-            activeIcon: Icon(Icons.chat_bubble),
-            label: 'Chat',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.folder_open_outlined),
-            activeIcon: Icon(Icons.folder),
-            label: 'Files',
-          ),
-        ],
-      ),
+      body: const ChatScreen(),
     );
   }
 }
