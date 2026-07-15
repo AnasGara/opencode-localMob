@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
 import 'package:provider/provider.dart';
 import '../providers/project_provider.dart';
+import '../services/file_service.dart';
 
 class FileViewerScreen extends StatelessWidget {
   const FileViewerScreen({super.key});
@@ -9,7 +9,9 @@ class FileViewerScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final projectProvider = Provider.of<ProjectProvider>(context);
-    final filename = projectProvider.selectedFilePath?.split(Platform.pathSeparator).last ?? 'Viewer';
+    final filename = projectProvider.selectedFilePath != null
+        ? FileService.getFileName(projectProvider.selectedFilePath)
+        : 'Viewer';
 
     return Scaffold(
       appBar: AppBar(
