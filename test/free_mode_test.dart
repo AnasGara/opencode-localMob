@@ -133,6 +133,17 @@ void main() {
     });
   });
 
+  group('ProjectProvider File Upload Tests', () {
+    test('uploadFile is defined and can clear selected files', () async {
+      final provider = ProjectProvider();
+      expect(provider.selectedFilePath, isNull);
+      expect(provider.selectedFileBytes, isNull);
+
+      provider.clearSelectedFile();
+      expect(provider.selectedFilePath, isNull);
+    });
+  });
+
   group('SetupScreen Widget Tests', () {
     testWidgets('Renders Skip button and allows skipping', (WidgetTester tester) async {
       final settings = SettingsProvider();
