@@ -75,7 +75,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       Icon(Icons.psychology_rounded, size: 60, color: Colors.grey),
                       SizedBox(height: 12),
                       Text(
-                        'Bou3orrif AI Playground',
+                        '  Chobbik lobbik\nBou3orrif bin ydik ',
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey),
                       ),
                       SizedBox(height: 4),
