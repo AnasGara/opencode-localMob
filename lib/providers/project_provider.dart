@@ -51,6 +51,26 @@ class ProjectProvider with ChangeNotifier {
     }
   }
 
+  Future<void> uploadFile() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final result = await _fileService.pickFile();
+      if (result != null && result.files.isNotEmpty) {
+        final file = result.files.first;
+        if (file.path != null) {
+          await selectFile(file.path!);
+        }
+      }
+    } catch (e) {
+      debugPrint('Error picking file: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> loadNodeChildren(FileNode node) async {
     if (!node.isDirectory) return;
     if (node.children.isNotEmpty) {

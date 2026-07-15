@@ -208,6 +208,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildInputBar(ChatProvider chatProvider) {
+    final projectProvider = Provider.of<ProjectProvider>(context, listen: false);
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
@@ -216,6 +217,13 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       child: Row(
         children: [
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.deepPurple),
+            tooltip: 'Upload image/video/doc',
+            onPressed: () async {
+              await projectProvider.uploadFile();
+            },
+          ),
           Expanded(
             child: TextField(
               controller: _inputController,
