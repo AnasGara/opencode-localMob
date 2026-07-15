@@ -45,7 +45,7 @@ void main() {
       expect(service.isInitialized, isTrue);
     });
 
-    test('sendMessageStream in free mode returns simulated response stream', () async {
+    test('sendMessageStream in free mode returns simulated offline response stream when client fails/offline', () async {
       final service = GeminiService();
       service.initialize('free');
 
@@ -54,10 +54,10 @@ void main() {
 
       expect(responses, isNotEmpty);
       expect(responses.first.text, isNotNull);
-      expect(responses.any((r) => r.text!.contains('Bou3orrif')), isTrue);
+      expect(responses.any((r) => r.text!.contains('offline')), isTrue);
     });
 
-    test('generateFreeModelResponse has smart responses', () async {
+    test('generateFreeModelResponse has smart responses for offline fallback', () async {
       final service = GeminiService();
       service.initialize('free');
 
@@ -65,7 +65,7 @@ void main() {
       final stream1 = service.sendMessageStream([]);
       final res1 = await stream1.toList();
       final text1 = res1.map((r) => r.text).join();
-      expect(text1, contains('Free Offline Mode'));
+      expect(text1, contains('offline'));
 
       // Test hello/hi response
       final service2 = GeminiService()..initialize('free');
@@ -74,7 +74,7 @@ void main() {
       ]);
       final res2 = await stream2.toList();
       final text2 = res2.map((r) => r.text).join();
-      expect(text2, contains('Bou3orrif'));
+      expect(text2, contains('offline'));
 
       // Test bug response
       final service3 = GeminiService()..initialize('free');
@@ -83,10 +83,10 @@ void main() {
       ]);
       final res3 = await stream3.toList();
       final text3 = res3.map((r) => r.text).join();
-      expect(text3, contains("Let's debug this issue"));
+      expect(text3, contains("offline"));
     });
 
-    test('sendMessageStream parses multimodal content with DataParts in free mode', () async {
+    test('sendMessageStream parses multimodal content with DataParts in free mode and defaults to offline fallback when client fails', () async {
       final service = GeminiService();
       service.initialize('free');
 
@@ -101,7 +101,7 @@ void main() {
       final responses = await stream.toList();
       expect(responses, isNotEmpty);
       final fullText = responses.map((r) => r.text).join();
-      expect(fullText, contains('Bou3orrif'));
+      expect(fullText, contains('offline'));
     });
   });
 

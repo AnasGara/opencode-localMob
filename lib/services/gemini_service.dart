@@ -183,6 +183,7 @@ class GeminiService {
       };
     }
 
+    bool yieldedAnything = false;
     try {
       final client = HttpClient();
       client.connectionTimeout = const Duration(seconds: 8);
@@ -194,7 +195,6 @@ class GeminiService {
 
       if (response.statusCode == 200) {
         final stream = response.transform(utf8.decoder).transform(const LineSplitter());
-        bool yieldedAnything = false;
         await for (final line in stream) {
           if (line.startsWith('data: ')) {
             final dataStr = line.substring(6).trim();
@@ -246,10 +246,31 @@ class GeminiService {
         }
         client.close();
         if (yieldedAnything) return;
+      } else {
+        client.close();
+        throw HttpException('Request failed with status: ${response.statusCode}');
       }
-      client.close();
-    } catch (_) {
-      // Fallback to local offline mock model
+    } catch (e) {
+      // Fallback or bubble up offline status
+      if (!yieldedAnything) {
+        final offlineResponse = "Connection failed: The app is offline. Please check your network connection.";
+        // Split response into small chunks to simulate streaming
+        final words = offlineResponse.split(' ');
+        for (var i = 0; i < words.length; i++) {
+          await Future.delayed(const Duration(milliseconds: 30));
+          final chunkText = words[i] + (i == words.length - 1 ? '' : ' ');
+          yield GenerateContentResponse([
+            Candidate(
+              Content.text(chunkText),
+              null,
+              null,
+              null,
+              null,
+            )
+          ], null);
+        }
+        return;
+      }
     }
 
     final lastContent = history.isNotEmpty ? history.last : null;
@@ -282,78 +303,28 @@ class GeminiService {
   String _generateFreeModelResponse(String userPrompt) {
     final promptLower = userPrompt.toLowerCase();
 
+    if (promptLower.isEmpty) {
+      return "Connection failed: The app is offline. Please check your network connection.";
+    }
+
     if (promptLower.contains('hello') || promptLower.contains('hi')) {
-      return "Hello! I am Bou3orrif, your polyvalent AI assistant running on a free, lightweight local offline model ($_modelName). "
-             "How can I help you today? I can help you with general knowledge questions, writing, brainstorming, or coding!";
+      return "Hello! I am Bou3orrif, your polyvalent AI assistant. It looks like we are offline right now. "
+             "Once you are reconnected, you can chat with free models like $_modelName!";
     }
 
     if (promptLower.contains('bug') || promptLower.contains('error') || promptLower.contains('debug') || promptLower.contains('fail')) {
-      return "### Let's debug this issue!\n\n"
-             "Common code errors usually fall into one of these categories:\n"
-             "1. **Null Safety issues**: Ensure that variables are initialized or marked as nullable (e.g., `String?`).\n"
-             "2. **Type Mismatch**: Verify that function signatures match the types being passed.\n"
-             "3. **State Management**: If UI is not updating, double check that `notifyListeners()` or `setState()` is being called.\n\n"
-             "Could you please share the error stack trace or the specific code snippet so I can give you a tailored fix?";
+      return "Connection failed: The app is offline. Please check your network connection to help debug this issue with $_modelName.";
     }
 
     if (promptLower.contains('explain') || promptLower.contains('how') || promptLower.contains('what')) {
-      return "### Explanation and Best Practices\n\n"
-             "When designing clean, maintainable systems, consider the following principles:\n"
-             "- **Clarity**: Keep your logic clear, structured, and easy to understand.\n"
-             "- **Separation of Concerns**: Separate your logic layers so that changes in one place do not break others.\n"
-             "- **Iterative Design**: Build complex systems using smaller, thoroughly tested parts.\n\n"
-             "Let me know if you have a specific topic or file you would like me to explain!";
+      return "Connection failed: The app is offline. Please check your network connection to explain or answer your questions.";
     }
 
     if (promptLower.contains('code') || promptLower.contains('write') || promptLower.contains('implement') || promptLower.contains('create') || promptLower.contains('make')) {
-      return "### Flutter/Dart Code Implementation Example\n\n"
-             "Here is a generic template for a stateful Flutter widget that handles loading and displaying data asynchronously:\n\n"
-             "```dart\n"
-             "import 'package:flutter/material.dart';\n\n"
-             "class DataViewerWidget extends StatefulWidget {\n"
-             "  const DataViewerWidget({super.key});\n\n"
-             "  @override\n"
-             "  State<DataViewerWidget> createState() => _DataViewerWidgetState();\n"
-             "}\n\n"
-             "class _DataViewerWidgetState extends State<DataViewerWidget> {\n"
-             "  bool _isLoading = false;\n"
-             "  String? _data;\n\n"
-             "  Future<void> _fetchData() async {\n"
-             "    setState(() => _isLoading = true);\n"
-             "    // Simulate network delay\n"
-             "    await Future.delayed(const Duration(seconds: 2));\n"
-             "    setState(() {\n"
-             "      _data = \"Hello from the Free Offline Model ($_modelName)!\";\n"
-             "      _isLoading = false;\n"
-             "    });\n"
-             "  }\n\n"
-             "  @override\n"
-             "  Widget build(BuildContext context) {\n"
-             "    return Column(\n"
-             "      mainAxisAlignment: MainAxisAlignment.center,\n"
-             "      children: [\n"
-             "        if (_isLoading) ...[\n"
-             "          const CircularProgressIndicator(),\n"
-             "        ] else if (_data != null) ...[\n"
-             "          Text(_data!, style: Theme.of(context).textTheme.titleLarge),\n"
-             "        ] else ...[\n"
-             "          ElevatedButton(\n"
-             "            onPressed: _fetchData,\n"
-             "            child: const Text('Fetch Data'),\n"
-             "          ),\n"
-             "        ],\n"
-             "      ],\n"
-             "    );\n"
-             "  }\n"
-             "}\n"
-             "```\n\n"
-             "Let me know if you would like me to adjust this implementation for your specific use-case!";
+      return "Connection failed: The app is offline. Please check your network connection to generate or run code implementations.";
     }
 
-    // Default general response
-    return "Thank you for reaching out! I am Bou3orrif, running in **Free Offline Mode** with model `$_modelName` (no Gemini API key required).\n\n"
-           "I am a polyvalent assistant here to help with all of your general tasks, writing, research, and analysis. "
-           "You can also attach any local files from your workspace using the folder/browser tab.\n\n"
-           "Feel free to ask me anything!";
+    // Default offline/general response
+    return "Connection failed: The app is offline. Please check your network connection.";
   }
 }
