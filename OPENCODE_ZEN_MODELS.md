@@ -21,9 +21,11 @@ The following high-quality models are served completely free through OpenCode Ze
 | Model ID | Best For | Description | Cost |
 | :--- | :--- | :--- | :--- |
 | **`big-pickle`** | General coding & reasoning | Default general-purpose coding and reasoning stealth model. Extremely fast. | **Free** |
-| **`minimax-m2.5-free`** | Complex reasoning & long context | Strong logical reasoning, excellent for architecture decisions and debugging. | **Free** |
-| **`mimo-v2-pro-free`** | Large codebases & refactoring | Xiaomi's optimized coding model, handles long context and multi-file changes. | **Free** |
-| **`nemotron-3-super-free`** | Super fast completions | NVIDIA's high-speed reasoning model, optimized for low-latency completions. | **Free** |
+| **`deepseek-v4-flash-free`** | Fast reasoning & general chat | DeepSeek's fast reasoning and conversational model, highly optimized. | **Free** |
+| **`mimo-v2.5-free`** | Large codebases & refactoring | Xiaomi's updated coding model, handles long context and multi-file changes. | **Free** |
+| **`hy3-free`** | Creative & complex tasks | Advanced reasoning model for creative problem-solving and coding. | **Free** |
+| **`nemotron-3-ultra-free`** | Super fast completions | NVIDIA's high-speed reasoning model, optimized for low-latency completions. | **Free** |
+| **`north-mini-code-free`** | Compact coding assistant | Ultra-fast, lightweight coding model optimized for code generation and debugging. | **Free** |
 
 ---
 
