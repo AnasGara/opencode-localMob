@@ -24,13 +24,17 @@ class SettingsProvider with ChangeNotifier {
   }
 
   Future<void> loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    _apiKey = prefs.getString('gemini_api_key');
-    _geminiApiKey = prefs.getString('gemini_api_key');
-    _openaiApiKey = prefs.getString('openai_api_key');
-    _claudeApiKey = prefs.getString('claude_api_key');
-    _isDarkMode = prefs.getBool('is_dark_mode') ?? true;
-    _selectedModel = prefs.getString('selected_model');
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _apiKey = prefs.getString('gemini_api_key');
+      _geminiApiKey = prefs.getString('gemini_api_key');
+      _openaiApiKey = prefs.getString('openai_api_key');
+      _claudeApiKey = prefs.getString('claude_api_key');
+      _isDarkMode = prefs.getBool('is_dark_mode') ?? true;
+      _selectedModel = prefs.getString('selected_model');
+    } catch (e, stackTrace) {
+      debugPrint('Error loading settings from SharedPreferences: $e\n$stackTrace');
+    }
     notifyListeners();
   }
 

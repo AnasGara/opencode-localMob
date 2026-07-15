@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
 import 'package:provider/provider.dart';
 import '../providers/project_provider.dart';
+import '../services/file_service.dart';
 import 'file_viewer_screen.dart';
 
 class FileBrowserScreen extends StatelessWidget {
@@ -10,7 +10,9 @@ class FileBrowserScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final projectProvider = Provider.of<ProjectProvider>(context);
-    final filename = projectProvider.selectedFilePath?.split(Platform.pathSeparator).last;
+    final filename = projectProvider.selectedFilePath != null
+        ? FileService.getFileName(projectProvider.selectedFilePath)
+        : null;
 
     return Scaffold(
       body: projectProvider.isLoading

@@ -6,10 +6,18 @@ import 'providers/chat_provider.dart';
 import 'providers/project_provider.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
+  } catch (e) {
+    debugPrint('WidgetsFlutterBinding initialization error: $e');
+  }
 
   final settingsProvider = SettingsProvider();
-  await settingsProvider.loadSettings();
+  try {
+    await settingsProvider.loadSettings();
+  } catch (e, stackTrace) {
+    debugPrint('Error loading settings on startup: $e\n$stackTrace');
+  }
 
   runApp(
     MultiProvider(

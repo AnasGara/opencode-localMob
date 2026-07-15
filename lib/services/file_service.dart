@@ -4,6 +4,13 @@ import 'package:file_picker/file_picker.dart';
 import '../models/file_node.dart';
 
 class FileService {
+  static String getFileName(String? path) {
+    if (path == null || path.isEmpty) return '';
+    final index = path.lastIndexOf(RegExp(r'[/\\]'));
+    if (index == -1) return path;
+    return path.substring(index + 1);
+  }
+
   Future<String?> pickDirectory() async {
     return await FilePicker.platform.getDirectoryPath();
   }
@@ -31,7 +38,7 @@ class FileService {
       });
 
       for (var entity in entities) {
-        final name = entity.path.split(Platform.pathSeparator).last;
+        final name = getFileName(entity.path);
         if (name.startsWith('.')) continue; // skip hidden files (.git, etc)
 
         nodes.add(FileNode(
