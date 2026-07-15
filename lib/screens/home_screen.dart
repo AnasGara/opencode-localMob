@@ -41,7 +41,14 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (ctx) {
         final currentModel = settings.selectedModel;
 
-        final List<String> availableModels = ['big-pickle', 'minimax-m2.5-free', 'mimo-v2-pro-free', 'nemotron-3-super-free'];
+        final List<String> availableModels = [
+          'big-pickle',
+          'deepseek-v4-flash-free',
+          'mimo-v2.5-free',
+          'hy3-free',
+          'nemotron-3-ultra-free',
+          'north-mini-code-free',
+        ];
         if (settings.geminiApiKey != null && settings.geminiApiKey!.isNotEmpty) {
           availableModels.addAll(['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro']);
         }
