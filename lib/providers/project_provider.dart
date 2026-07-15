@@ -32,7 +32,7 @@ class ProjectProvider with ChangeNotifier {
       final path = await _fileService.pickDirectory();
       if (path != null) {
         _projectPath = path;
-        final name = path.split(Platform.pathSeparator).last;
+        final name = FileService.getFileName(path);
         
         final children = await _fileService.listDirectoryContents(path);
         _rootNode = FileNode(
@@ -135,7 +135,7 @@ class ProjectProvider with ChangeNotifier {
         final isBinary = _isBinaryFile(filePath);
         if (isBinary) {
           _selectedFileBytes = await file.readAsBytes();
-          _selectedFileContent = "[Attached Media File: ${filePath.split(Platform.pathSeparator).last}]";
+          _selectedFileContent = "[Attached Media File: ${FileService.getFileName(filePath)}]";
         } else {
           _selectedFileContent = await file.readAsString();
         }

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
 import 'package:provider/provider.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import '../providers/chat_provider.dart';
 import '../providers/project_provider.dart';
 import '../models/chat_message.dart';
+import '../services/file_service.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -38,7 +38,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final chatProvider = Provider.of<ChatProvider>(context, listen: false);
 
     if (projectProvider.selectedFilePath != null) {
-      final filename = projectProvider.selectedFilePath!.split(Platform.pathSeparator).last;
+      final filename = FileService.getFileName(projectProvider.selectedFilePath);
       chatProvider.sendMessage(
         text: text,
         attachedFileName: filename,
@@ -113,7 +113,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Referencing: ${projectProvider.selectedFilePath!.split(Platform.pathSeparator).last}',
+                    'Referencing: ${FileService.getFileName(projectProvider.selectedFilePath)}',
                     style: const TextStyle(fontWeight: FontWeight.w500),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -129,7 +129,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   icon: const Icon(Icons.send_rounded, color: Colors.deepPurple),
                   tooltip: 'Inject context & prompt',
                   onPressed: () {
-                    final filename = projectProvider.selectedFilePath!.split(Platform.pathSeparator).last;
+                    final filename = FileService.getFileName(projectProvider.selectedFilePath);
                     if (projectProvider.selectedFileBytes != null) {
                       chatProvider.sendMessage(
                         text: "Analyze this file and tell me what you see or what it represents.",

@@ -10,9 +10,30 @@ import 'package:opencodemobile/providers/project_provider.dart';
 import 'package:opencodemobile/services/gemini_service.dart';
 import 'package:opencodemobile/app.dart';
 
+import 'package:opencodemobile/services/file_service.dart';
+
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+  });
+
+  group('FileService getFileName Tests', () {
+    test('extracts filename from Unix paths', () {
+      expect(FileService.getFileName('/home/user/documents/report.pdf'), equals('report.pdf'));
+    });
+
+    test('extracts filename from Windows paths', () {
+      expect(FileService.getFileName(r'C:\Users\Name\Desktop\image.png'), equals('image.png'));
+    });
+
+    test('handles single filename without paths', () {
+      expect(FileService.getFileName('data.json'), equals('data.json'));
+    });
+
+    test('handles null and empty paths gracefully', () {
+      expect(FileService.getFileName(null), equals(''));
+      expect(FileService.getFileName(''), equals(''));
+    });
   });
 
   group('GeminiService Free Mode Tests', () {
