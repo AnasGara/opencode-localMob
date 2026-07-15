@@ -13,9 +13,27 @@ class ChatScreen extends StatefulWidget {
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateMixin {
   final _inputController = TextEditingController();
   final _scrollController = ScrollController();
+  late AnimationController _animationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _inputController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -68,22 +86,35 @@ class _ChatScreenState extends State<ChatScreen> {
       children: [
         Expanded(
           child: chatProvider.messages.isEmpty && chatProvider.streamingText.isEmpty
-              ? const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.psychology_rounded, size: 60, color: Colors.grey),
-                      SizedBox(height: 12),
-                      Text(
-                        '  Chobbik lobbik\nBou3orrif bin ydik ',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Open the "Files" tab to import/reference a workspace!',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ],
+              ? Center(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // A beautifully animated, custom-drawn Genie Lamp & Smoke
+                        AnimatedBuilder(
+                          animation: _animationController,
+                          builder: (context, child) {
+                            return CustomPaint(
+                              size: const Size(180, 180),
+                              painter: GeniePainter(animationValue: _animationController.value),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Chobbik lobbik\nBou3orrif bin ydik',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.deepPurpleAccent),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Your powerful AI Genie is ready to assist you!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.grey, fontSize: 14),
+                        ),
+                      ],
+                    ),
                   ),
                 )
               : ListView.builder(
@@ -106,7 +137,7 @@ class _ChatScreenState extends State<ChatScreen> {
         if (projectProvider.selectedFilePath != null)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: Colors.deepPurple.withValues(alpha: 0.1),
+            color: Colors.deepPurple.withOpacity(0.1),
             child: Row(
               children: [
                 const Icon(Icons.attach_file_rounded, size: 20, color: Colors.deepPurple),
@@ -152,7 +183,10 @@ class _ChatScreenState extends State<ChatScreen> {
               ],
             ),
           ),
-        _buildInputBar(chatProvider),
+        SafeArea(
+          top: false,
+          child: _buildInputBar(chatProvider),
+        ),
       ],
     );
   }
@@ -170,7 +204,7 @@ class _ChatScreenState extends State<ChatScreen> {
           Row(
             mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
             children: [
-              Icon(isUser ? Icons.person_rounded : Icons.android_rounded, size: 14, color: Colors.grey),
+              Icon(isUser ? Icons.person_rounded : Icons.auto_awesome_rounded, size: 14, color: Colors.grey),
               const SizedBox(width: 4),
               Text(isUser ? 'You' : 'Bou3orrif', style: const TextStyle(fontSize: 11, color: Colors.grey)),
             ],
@@ -195,9 +229,9 @@ class _ChatScreenState extends State<ChatScreen> {
                     styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
                       code: const TextStyle(fontFamily: 'monospace', backgroundColor: Colors.transparent),
                       codeblockDecoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.05),
+                        color: Colors.black.withOpacity(0.05),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+                        border: Border.all(color: Colors.grey.withOpacity(0.2)),
                       ),
                     ),
                   ),
@@ -213,7 +247,7 @@ class _ChatScreenState extends State<ChatScreen> {
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.2))),
+        border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.2))),
       ),
       child: Row(
         children: [
@@ -248,5 +282,108 @@ class _ChatScreenState extends State<ChatScreen> {
         ],
       ),
     );
+  }
+}
+
+class GeniePainter extends CustomPainter {
+  final double animationValue;
+
+  GeniePainter({required this.animationValue});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..isAntiAlias = true;
+    final center = Offset(size.width / 2, size.height / 2);
+
+    // 1. Magical Smoke
+    final smokePaint = Paint()
+      ..color = Colors.cyan.withOpacity(0.3)
+      ..style = PaintingStyle.fill;
+
+    // Draw some dynamic swirling smoke clouds from the spout location
+    // Spout is roughly at (center.dx - 40, center.dy)
+    final spoutX = center.dx - 40;
+    final spoutY = center.dy - 10;
+
+    for (int i = 0; i < 4; i++) {
+      final progress = (animationValue + i / 4) % 1.0;
+      final radius = 10.0 + progress * 25.0;
+      final dx = spoutX - progress * 50.0 + (progress * 20.0 * (i % 2 == 0 ? 1 : -1));
+      final dy = spoutY - progress * 70.0;
+
+      canvas.drawCircle(Offset(dx, dy), radius, smokePaint);
+    }
+
+    // 2. Base/Shadow
+    paint.color = Colors.black26;
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(center.dx, center.dy + 45), width: 100, height: 15),
+      paint,
+    );
+
+    // 3. Gold Genie Lamp body
+    final lampColor = Colors.amber;
+    paint.color = lampColor;
+    paint.style = PaintingStyle.fill;
+
+    // Base
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset(center.dx + 5, center.dy + 35), width: 60, height: 12),
+        const Radius.circular(6),
+      ),
+      paint,
+    );
+
+    // Stand
+    final standPath = Path()
+      ..moveTo(center.dx - 15, center.dy + 35)
+      ..lineTo(center.dx + 25, center.dy + 35)
+      ..lineTo(center.dx + 15, center.dy + 15)
+      ..lineTo(center.dx - 5, center.dy + 15)
+      ..close();
+    canvas.drawPath(standPath, paint);
+
+    // Main Body
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(center.dx + 10, center.dy + 10), width: 90, height: 50),
+      paint,
+    );
+
+    // Handle
+    final handlePaint = Paint()
+      ..color = lampColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 10;
+    canvas.drawArc(
+      Rect.fromCenter(center: Offset(center.dx + 45, center.dy + 5), width: 35, height: 45),
+      -1.2,
+      2.4,
+      false,
+      handlePaint,
+    );
+
+    // Spout (Nozzle)
+    final spoutPath = Path()
+      ..moveTo(center.dx - 30, center.dy + 15)
+      ..quadraticBezierTo(center.dx - 50, center.dy - 10, center.dx - 65, center.dy - 5)
+      ..lineTo(center.dx - 65, center.dy + 5)
+      ..quadraticBezierTo(center.dx - 45, center.dy + 15, center.dx - 30, center.dy + 25)
+      ..close();
+    canvas.drawPath(spoutPath, paint);
+
+    // Lid and Knob
+    paint.style = PaintingStyle.fill;
+    paint.color = Colors.amber.shade700;
+    canvas.drawCircle(Offset(center.dx + 10, center.dy - 18), 7, paint);
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(center.dx + 10, center.dy - 13), width: 35, height: 8),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant GeniePainter oldDelegate) {
+    return oldDelegate.animationValue != animationValue;
   }
 }

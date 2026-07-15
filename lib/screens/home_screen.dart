@@ -16,15 +16,10 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     final settings = Provider.of<SettingsProvider>(context, listen: false);
-    if (settings.apiKey != null || settings.openaiApiKey != null || settings.claudeApiKey != null) {
-      Provider.of<ChatProvider>(context, listen: false).initialize(
-        settings.apiKey ?? 'free',
-        modelName: settings.selectedModel,
-        openaiApiKey: settings.openaiApiKey,
-        claudeApiKey: settings.claudeApiKey,
-        geminiApiKey: settings.geminiApiKey,
-      );
-    }
+    Provider.of<ChatProvider>(context, listen: false).initialize(
+      'free',
+      modelName: settings.selectedModel,
+    );
   }
 
   void _showSettingsDialog(BuildContext context, SettingsProvider settings) {
@@ -41,15 +36,6 @@ class _HomeScreenState extends State<HomeScreen> {
           'nemotron-3-ultra-free',
           'north-mini-code-free',
         ];
-        if (settings.geminiApiKey != null && settings.geminiApiKey!.isNotEmpty) {
-          availableModels.addAll(['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro']);
-        }
-        if (settings.openaiApiKey != null && settings.openaiApiKey!.isNotEmpty) {
-          availableModels.addAll(['gpt-4o', 'gpt-4o-mini', 'o1-mini', 'o3-mini']);
-        }
-        if (settings.claudeApiKey != null && settings.claudeApiKey!.isNotEmpty) {
-          availableModels.addAll(['claude-3-5-sonnet', 'claude-3-5-haiku']);
-        }
 
         return AlertDialog(
           title: const Row(
@@ -82,11 +68,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       await settings.setSelectedModel(newModel);
                       if (context.mounted) {
                         Provider.of<ChatProvider>(context, listen: false).initialize(
-                          settings.apiKey ?? 'free',
+                          'free',
                           modelName: newModel,
-                          openaiApiKey: settings.openaiApiKey,
-                          claudeApiKey: settings.claudeApiKey,
-                          geminiApiKey: settings.geminiApiKey,
                         );
                       }
                     }
@@ -96,65 +79,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                 ),
-                const SizedBox(height: 24),
-                const Divider(),
-                const SizedBox(height: 12),
-                const Text(
-                  'Configure API Keys',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  initialValue: settings.geminiApiKey,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Google AI Studio Key',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.vpn_key_rounded),
-                  ),
-                  onChanged: (val) async {
-                    await settings.setGeminiApiKey(val.trim());
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  initialValue: settings.openaiApiKey,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'OpenAI API Key',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.vpn_key_rounded),
-                  ),
-                  onChanged: (val) async {
-                    await settings.setOpenaiApiKey(val.trim());
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  initialValue: settings.claudeApiKey,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Anthropic Claude Key',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.vpn_key_rounded),
-                  ),
-                  onChanged: (val) async {
-                    await settings.setClaudeApiKey(val.trim());
-                  },
-                ),
               ],
             ),
           ),
           actions: [
             TextButton(
               onPressed: () {
-                // Re-initialize ChatProvider with updated key configurations upon closing
                 Provider.of<ChatProvider>(context, listen: false).initialize(
-                  settings.apiKey ?? 'free',
+                  'free',
                   modelName: settings.selectedModel,
-                  openaiApiKey: settings.openaiApiKey,
-                  claudeApiKey: settings.claudeApiKey,
-                  geminiApiKey: settings.geminiApiKey,
                 );
                 Navigator.pop(ctx);
               },
@@ -191,44 +124,6 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             icon: Icon(settings.isDarkMode ? Icons.light_mode : Icons.dark_mode),
             onPressed: settings.toggleTheme,
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout_rounded),
-            tooltip: 'Reset Keys to Default Free Mode',
-            onPressed: () async {
-              final confirm = await showDialog<bool>(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text('Reset Keys'),
-                  content: const Text('Are you sure you want to clear your custom API keys? This will revert the assistant back to Free Mode.'),
-                  actions: [
-                    TextButton(
-                      child: const Text('Cancel'),
-                      onPressed: () => Navigator.pop(ctx, false),
-                    ),
-                    TextButton(
-                      child: const Text('Reset', style: TextStyle(color: Colors.red)),
-                      onPressed: () => Navigator.pop(ctx, true),
-                    ),
-                  ],
-                ),
-              );
-
-              if (confirm == true) {
-                await settings.clearApiKey();
-                if (!context.mounted) return;
-                Provider.of<ChatProvider>(context, listen: false).initialize(
-                  settings.apiKey ?? 'free',
-                  modelName: settings.selectedModel,
-                  openaiApiKey: settings.openaiApiKey,
-                  claudeApiKey: settings.claudeApiKey,
-                  geminiApiKey: settings.geminiApiKey,
-                );
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('API Keys cleared. Returned to Free Mode.')),
-                );
-              }
-            },
           ),
         ],
       ),
