@@ -8,6 +8,13 @@ class FileService {
     return await FilePicker.platform.getDirectoryPath();
   }
 
+  Future<FilePickerResult?> pickFile() async {
+    return await FilePicker.platform.pickFiles(
+      type: FileType.any,
+      allowMultiple: false,
+    );
+  }
+
   Future<List<FileNode>> listDirectoryContents(String path) async {
     final dir = Directory(path);
     if (!await dir.exists()) return [];

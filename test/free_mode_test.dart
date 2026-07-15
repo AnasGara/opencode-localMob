@@ -113,6 +113,35 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getString('selected_model'), equals('minimax-m2.5-free'));
     });
+
+    test('Multiple API keys getters and setters', () async {
+      final settings = SettingsProvider();
+      await settings.loadSettings();
+
+      await settings.setGeminiApiKey('google-test-key');
+      await settings.setOpenaiApiKey('openai-test-key');
+      await settings.setClaudeApiKey('claude-test-key');
+
+      expect(settings.geminiApiKey, equals('google-test-key'));
+      expect(settings.openaiApiKey, equals('openai-test-key'));
+      expect(settings.claudeApiKey, equals('claude-test-key'));
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('gemini_api_key'), equals('google-test-key'));
+      expect(prefs.getString('openai_api_key'), equals('openai-test-key'));
+      expect(prefs.getString('claude_api_key'), equals('claude-test-key'));
+    });
+  });
+
+  group('ProjectProvider File Upload Tests', () {
+    test('uploadFile is defined and can clear selected files', () async {
+      final provider = ProjectProvider();
+      expect(provider.selectedFilePath, isNull);
+      expect(provider.selectedFileBytes, isNull);
+
+      provider.clearSelectedFile();
+      expect(provider.selectedFilePath, isNull);
+    });
   });
 
   group('SetupScreen Widget Tests', () {

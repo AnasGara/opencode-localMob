@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:provider/provider.dart';
 import '../providers/project_provider.dart';
-import '../models/file_node.dart';
 import 'file_viewer_screen.dart';
 
 class FileBrowserScreen extends StatelessWidget {
@@ -10,99 +10,93 @@ class FileBrowserScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final projectProvider = Provider.of<ProjectProvider>(context);
+    final filename = projectProvider.selectedFilePath?.split(Platform.pathSeparator).last;
 
     return Scaffold(
       body: projectProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : projectProvider.rootNode == null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.folder_open_rounded, size: 70, color: Colors.grey),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'Workspace Closed',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey),
+          : Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.cloud_upload_rounded, size: 80, color: Colors.deepPurple),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Upload Media or Documents',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Select a photo, video, or document file from your device to analyze with Bou3orrif.',
+                      style: TextStyle(color: Colors.grey),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 32),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepPurple,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(200, 50),
                       ),
-                      const SizedBox(height: 4),
-                      const Text('Open a directory to index its codebase.', style: TextStyle(color: Colors.grey)),
-                      const SizedBox(height: 24),
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepPurple,
-                          foregroundColor: Colors.white,
+                      icon: const Icon(Icons.upload_file_rounded),
+                      label: const Text('Select File'),
+                      onPressed: projectProvider.uploadFile,
+                    ),
+                    if (projectProvider.selectedFilePath != null) ...[
+                      const SizedBox(height: 32),
+                      const Divider(),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Currently Attached File:',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 12),
+                      Card(
+                        elevation: 0,
+                        color: Colors.deepPurple.withValues(alpha: 0.05),
+                        child: ListTile(
+                          leading: Icon(
+                            projectProvider.selectedFileBytes != null
+                                ? (projectProvider.selectedFileMimeType?.startsWith('image/') == true
+                                    ? Icons.image_rounded
+                                    : Icons.video_camera_back_rounded)
+                                : Icons.insert_drive_file_rounded,
+                            color: Colors.deepPurple,
+                          ),
+                          title: Text(filename ?? ''),
+                          subtitle: Text(projectProvider.selectedFileMimeType ?? 'Unknown Mime Type'),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.remove_red_eye_rounded, color: Colors.deepPurple),
+                                tooltip: 'View File Content',
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => const FileViewerScreen()),
+                                  );
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.close_rounded, color: Colors.red),
+                                tooltip: 'Remove File',
+                                onPressed: () {
+                                  projectProvider.clearSelectedFile();
+                                },
+                              ),
+                            ],
+                          ),
                         ),
-                        icon: const Icon(Icons.search_rounded),
-                        label: const Text('Open Project Folder'),
-                        onPressed: projectProvider.openProject,
                       ),
                     ],
-                  ),
-                )
-              : Column(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      color: Colors.deepPurple.withValues(alpha: 0.05),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.folder_shared_rounded, color: Colors.deepPurple),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              projectProvider.projectPath ?? '',
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.close_rounded, color: Colors.red),
-                            onPressed: projectProvider.closeProject,
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: ListView(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        children: [
-                          _buildNodeWidget(context, projectProvider.rootNode!, projectProvider),
-                        ],
-                      ),
-                    ),
                   ],
                 ),
+              ),
+            ),
     );
-  }
-
-  Widget _buildNodeWidget(BuildContext context, FileNode node, ProjectProvider provider) {
-    if (node.isDirectory) {
-      return ExpansionTile(
-        key: PageStorageKey<String>(node.path),
-        title: Text(node.name),
-        leading: const Icon(Icons.folder_rounded, color: Colors.amber),
-        initiallyExpanded: node.isExpanded,
-        onExpansionChanged: (expanded) {
-          provider.loadNodeChildren(node);
-        },
-        children: node.children.map((child) => _buildNodeWidget(context, child, provider)).toList(),
-      );
-    } else {
-      return ListTile(
-        title: Text(node.name),
-        leading: const Icon(Icons.insert_drive_file_rounded, color: Colors.blue),
-        contentPadding: const EdgeInsets.only(left: 32.0, right: 16.0),
-        onTap: () async {
-          await provider.selectFile(node.path);
-          if (context.mounted) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const FileViewerScreen()),
-            );
-          }
-        },
-      );
-    }
   }
 }
