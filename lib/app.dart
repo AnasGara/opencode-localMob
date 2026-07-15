@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/settings_provider.dart';
-import 'screens/setup_screen.dart';
 import 'screens/home_screen.dart';
 
 class OpenCodeApp extends StatelessWidget {
@@ -29,9 +28,8 @@ class OpenCodeApp extends StatelessWidget {
             useMaterial3: true,
           ),
           themeMode: settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-          initialRoute: settings.apiKey != null ? '/home' : '/setup',
+          initialRoute: '/home',
           routes: {
-            '/setup': (context) => const SetupScreen(),
             '/home': (context) => const HomeScreen(),
           },
         );

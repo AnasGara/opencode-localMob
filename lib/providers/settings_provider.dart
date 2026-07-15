@@ -19,19 +19,18 @@ class SettingsProvider with ChangeNotifier {
   String? get claudeApiKey => _claudeApiKey;
 
   String get selectedModel {
-    if (_selectedModel != null) return _selectedModel!;
-    return apiKey == 'free' ? 'big-pickle' : 'gemini-2.0-flash';
+    return _selectedModel ?? 'big-pickle';
   }
 
   Future<void> loadSettings() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      _apiKey = prefs.getString('gemini_api_key');
+      _apiKey = prefs.getString('gemini_api_key') ?? 'free';
       _geminiApiKey = prefs.getString('gemini_api_key');
       _openaiApiKey = prefs.getString('openai_api_key');
       _claudeApiKey = prefs.getString('claude_api_key');
       _isDarkMode = prefs.getBool('is_dark_mode') ?? true;
-      _selectedModel = prefs.getString('selected_model');
+      _selectedModel = prefs.getString('selected_model') ?? 'big-pickle';
     } catch (e, stackTrace) {
       debugPrint('Error loading settings from SharedPreferences: $e\n$stackTrace');
     }
@@ -105,11 +104,11 @@ class SettingsProvider with ChangeNotifier {
   }
 
   Future<void> clearApiKey() async {
-    _apiKey = null;
+    _apiKey = 'free';
     _geminiApiKey = null;
     _openaiApiKey = null;
     _claudeApiKey = null;
-    _selectedModel = null;
+    _selectedModel = 'big-pickle';
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('gemini_api_key');
     await prefs.remove('openai_api_key');

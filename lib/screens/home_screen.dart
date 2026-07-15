@@ -202,19 +202,20 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.logout_rounded),
+            tooltip: 'Reset Keys to Default Free Mode',
             onPressed: () async {
               final confirm = await showDialog<bool>(
                 context: context,
                 builder: (ctx) => AlertDialog(
                   title: const Text('Reset Keys'),
-                  content: const Text('Are you sure you want to delete this configuration?'),
+                  content: const Text('Are you sure you want to clear your custom API keys? This will revert the assistant back to Free Mode.'),
                   actions: [
                     TextButton(
                       child: const Text('Cancel'),
                       onPressed: () => Navigator.pop(ctx, false),
                     ),
                     TextButton(
-                      child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                      child: const Text('Reset', style: TextStyle(color: Colors.red)),
                       onPressed: () => Navigator.pop(ctx, true),
                     ),
                   ],
@@ -224,7 +225,16 @@ class _HomeScreenState extends State<HomeScreen> {
               if (confirm == true) {
                 await settings.clearApiKey();
                 if (!context.mounted) return;
-                Navigator.pushReplacementNamed(context, '/setup');
+                Provider.of<ChatProvider>(context, listen: false).initialize(
+                  settings.apiKey ?? 'free',
+                  modelName: settings.selectedModel,
+                  openaiApiKey: settings.openaiApiKey,
+                  claudeApiKey: settings.claudeApiKey,
+                  geminiApiKey: settings.geminiApiKey,
+                );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('API Keys cleared. Returned to Free Mode.')),
+                );
               }
             },
           ),
