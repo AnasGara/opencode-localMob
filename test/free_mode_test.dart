@@ -165,8 +165,8 @@ void main() {
     });
   });
 
-  group('SetupScreen Widget Tests', () {
-    testWidgets('Renders Skip button and allows skipping', (WidgetTester tester) async {
+  group('HomeScreen Direct Rendering Tests', () {
+    testWidgets('Renders HomeScreen directly in free mode by default', (WidgetTester tester) async {
       final settings = SettingsProvider();
       await settings.loadSettings();
 
@@ -181,18 +181,11 @@ void main() {
         ),
       );
 
-      // Verify the button text is visible
-      expect(find.text('Skip & Use Free Models'), findsOneWidget);
-
-      // Tap on Skip & Use Free Models
-      await tester.tap(find.text('Skip & Use Free Models'));
-      await tester.pumpAndSettle();
-
-      // Check that apiKey is now 'free'
+      // Verify that apiKey defaults to 'free'
       expect(settings.apiKey, equals('free'));
 
-      // Verify navigation to home screen (which renders Bou3orrif app bar title)
-      expect(find.text('Bou3orrif'), findsOneWidget);
+      // Verify direct navigation/rendering of home screen (renders Bou3orrif app bar title)
+      expect(find.text('Bou3orrif'), findsAtLeast(1));
     });
   });
 }
