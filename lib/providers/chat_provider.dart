@@ -14,8 +14,20 @@ class ChatProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String get streamingText => _streamingText;
 
-  void initialize(String apiKey, {String? modelName}) {
-    _geminiService.initialize(apiKey, modelName: modelName);
+  void initialize(
+    String apiKey, {
+    String? modelName,
+    String? openaiApiKey,
+    String? claudeApiKey,
+    String? geminiApiKey,
+  }) {
+    _geminiService.initialize(
+      apiKey,
+      modelName: modelName,
+      openaiApiKey: openaiApiKey,
+      claudeApiKey: claudeApiKey,
+      geminiApiKey: geminiApiKey,
+    );
   }
 
   Future<void> sendMessage({
