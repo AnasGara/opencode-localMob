@@ -31,10 +31,26 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _sendMessage() {
     final text = _inputController.text.trim();
-    if (text.isEmpty) return;
+    final projectProvider = Provider.of<ProjectProvider>(context, listen: false);
+
+    if (text.isEmpty && projectProvider.selectedFilePath == null) return;
 
     final chatProvider = Provider.of<ChatProvider>(context, listen: false);
-    chatProvider.sendMessage(text: text);
+
+    if (projectProvider.selectedFilePath != null) {
+      final filename = projectProvider.selectedFilePath!.split(Platform.pathSeparator).last;
+      chatProvider.sendMessage(
+        text: text,
+        attachedFileName: filename,
+        attachedFileContent: projectProvider.selectedFileContent,
+        attachedFileBytes: projectProvider.selectedFileBytes,
+        attachedFileMimeType: projectProvider.selectedFileMimeType,
+      );
+      projectProvider.clearSelectedFile();
+    } else {
+      chatProvider.sendMessage(text: text);
+    }
+
     _inputController.clear();
     _scrollToBottom();
   }
@@ -103,18 +119,34 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                 ),
                 IconButton(
+                  icon: const Icon(Icons.close_rounded, color: Colors.red),
+                  tooltip: 'Remove Attachment',
+                  onPressed: () {
+                    projectProvider.clearSelectedFile();
+                  },
+                ),
+                IconButton(
                   icon: const Icon(Icons.send_rounded, color: Colors.deepPurple),
                   tooltip: 'Inject context & prompt',
                   onPressed: () {
-                    if (projectProvider.selectedFileContent != null) {
-                      final filename = projectProvider.selectedFilePath!.split(Platform.pathSeparator).last;
+                    final filename = projectProvider.selectedFilePath!.split(Platform.pathSeparator).last;
+                    if (projectProvider.selectedFileBytes != null) {
+                      chatProvider.sendMessage(
+                        text: "Analyze this file and tell me what you see or what it represents.",
+                        attachedFileName: filename,
+                        attachedFileBytes: projectProvider.selectedFileBytes,
+                        attachedFileMimeType: projectProvider.selectedFileMimeType,
+                      );
+                      projectProvider.clearSelectedFile();
+                    } else if (projectProvider.selectedFileContent != null) {
                       chatProvider.sendMessage(
                         text: "Analyze this file. What does it do and are there any bugs?",
                         attachedFileName: filename,
                         attachedFileContent: projectProvider.selectedFileContent,
                       );
-                      _scrollToBottom();
+                      projectProvider.clearSelectedFile();
                     }
+                    _scrollToBottom();
                   },
                 )
               ],

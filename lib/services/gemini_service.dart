@@ -62,19 +62,37 @@ class GeminiService {
       request.headers.contentType = ContentType.json;
 
       // Construct OpenAI compatible messages from history
-      final messages = <Map<String, String>>[];
+      final messages = <Map<String, dynamic>>[];
       messages.add({
         'role': 'system',
-        'content': "You are OpenCode, an expert AI programming assistant running inside a Flutter mobile app. "
-                   "Your task is to help the user write, debug, explain, and optimize code."
+        'content': "You are Bou3orrif, an expert AI assistant running inside a Flutter mobile app. "
+                   "Your task is to help the user with general questions, writing, debugging, or code optimization."
       });
 
       for (var content in history) {
         if (content.parts.isEmpty) continue;
-        final part = content.parts.first;
-        if (part is TextPart) {
-          final text = part.text;
-          final role = content.role == 'user' ? 'user' : 'assistant';
+        final role = content.role == 'user' ? 'user' : 'assistant';
+
+        final dataParts = content.parts.whereType<DataPart>().toList();
+        final textParts = content.parts.whereType<TextPart>().toList();
+
+        if (dataParts.isNotEmpty) {
+          final contentList = <Map<String, dynamic>>[];
+          for (var t in textParts) {
+            contentList.add({'type': 'text', 'text': t.text});
+          }
+          for (var d in dataParts) {
+            final base64Str = base64Encode(d.bytes);
+            contentList.add({
+              'type': 'image_url',
+              'image_url': {
+                'url': 'data:${d.mimeType};base64,$base64Str'
+              }
+            });
+          }
+          messages.add({'role': role, 'content': contentList});
+        } else {
+          final text = textParts.map((t) => t.text).join('\n');
           messages.add({'role': role, 'content': text});
         }
       }
@@ -131,9 +149,13 @@ class GeminiService {
     }
 
     final lastContent = history.isNotEmpty ? history.last : null;
-    final lastMessage = (lastContent != null && lastContent.parts.isNotEmpty)
-        ? (lastContent.parts.first as TextPart).text
-        : '';
+    String lastMessage = '';
+    if (lastContent != null && lastContent.parts.isNotEmpty) {
+      final textPart = lastContent.parts.whereType<TextPart>().firstOrNull;
+      if (textPart != null) {
+        lastMessage = textPart.text;
+      }
+    }
     final responseText = _generateFreeModelResponse(lastMessage);
 
     // Split response into small chunks to simulate streaming
