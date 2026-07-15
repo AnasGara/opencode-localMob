@@ -18,7 +18,7 @@ class OpenCodeService {
       client.connectionTimeout = const Duration(seconds: 5);
       final url = Uri.parse('https://opencode.ai/zen/v1/chat/completions');
       final request = await client.postUrl(url);
-      request.headers.contentType = ContentType.json;
+      request.headers.contentType = ContentType('application', 'json', charset: 'utf-8');
 
       final payload = {
         'model': 'big-pickle',
@@ -28,7 +28,7 @@ class OpenCodeService {
         'stream': false
       };
 
-      request.write(jsonEncode(payload));
+      request.add(utf8.encode(jsonEncode(payload)));
       final response = await request.close();
       client.close();
       return response.statusCode == 200;
@@ -40,7 +40,7 @@ class OpenCodeService {
   Stream<String> sendMessageStream(List<Map<String, dynamic>> messages) async* {
     final url = 'https://opencode.ai/zen/v1/chat/completions';
     final headers = {
-      'content-type': 'application/json',
+      'content-type': 'application/json; charset=utf-8',
     };
 
     final systemPrompt = "You are Bou3orrif, a polyvalent, intelligent AI assistant running inside a Flutter mobile app. "
@@ -67,7 +67,7 @@ class OpenCodeService {
     final request = await client.postUrl(Uri.parse(url));
     headers.forEach((k, v) => request.headers.set(k, v));
 
-    request.write(jsonEncode(body));
+    request.add(utf8.encode(jsonEncode(body)));
     final response = await request.close();
 
     if (response.statusCode == 200) {
