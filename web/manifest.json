@@ -1,11 +1,11 @@
 {
-    "name": "opencodemobile",
-    "short_name": "opencodemobile",
+    "name": "Bou3ourrif AI",
+    "short_name": "Bou3ourrif AI",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "OpenCode Mobile",
+    "description": "Bou3ourrif AI Mobile",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
