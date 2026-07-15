@@ -1,11 +1,11 @@
 import 'dart:typed_data';
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
 import '../models/chat_message.dart';
-import '../services/gemini_service.dart';
+import '../services/opencode_service.dart';
 
 class ChatProvider with ChangeNotifier {
-  final GeminiService _geminiService = GeminiService();
+  final OpenCodeService _openCodeService = OpenCodeService();
   final List<ChatMessage> _messages = [];
   bool _isLoading = false;
   String _streamingText = '';
@@ -21,12 +21,8 @@ class ChatProvider with ChangeNotifier {
     String? claudeApiKey,
     String? geminiApiKey,
   }) {
-    _geminiService.initialize(
-      apiKey,
+    _openCodeService.initialize(
       modelName: modelName,
-      openaiApiKey: openaiApiKey,
-      claudeApiKey: claudeApiKey,
-      geminiApiKey: geminiApiKey,
     );
   }
 
@@ -54,7 +50,7 @@ class ChatProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final List<Content> apiHistory = [];
+      final List<Map<String, dynamic>> apiHistory = [];
 
       for (var msg in _messages) {
         String contentText = msg.text;
@@ -66,27 +62,40 @@ class ChatProvider with ChangeNotifier {
 
         if (msg.role == MessageRole.user) {
           if (msg.attachedFileBytes != null && msg.attachedFileMimeType != null) {
-            apiHistory.add(Content.multi([
-              DataPart(msg.attachedFileMimeType!, msg.attachedFileBytes!),
-              TextPart(contentText.isEmpty ? "Analyze this file" : contentText),
-            ]));
+            final base64Str = base64Encode(msg.attachedFileBytes!);
+            apiHistory.add({
+              'role': 'user',
+              'content': [
+                {'type': 'text', 'text': contentText.isEmpty ? "Analyze this file" : contentText},
+                {
+                  'type': 'image_url',
+                  'image_url': {
+                    'url': 'data:${msg.attachedFileMimeType};base64,$base64Str'
+                  }
+                }
+              ]
+            });
           } else {
-            apiHistory.add(Content.text(contentText));
+            apiHistory.add({
+              'role': 'user',
+              'content': contentText,
+            });
           }
         } else {
-          apiHistory.add(Content.model([TextPart(msg.text)]));
+          apiHistory.add({
+            'role': 'assistant',
+            'content': msg.text,
+          });
         }
       }
 
-      final responseStream = _geminiService.sendMessageStream(apiHistory);
+      final responseStream = _openCodeService.sendMessageStream(apiHistory);
       _isLoading = false; 
       notifyListeners();
 
       await for (final chunk in responseStream) {
-        if (chunk.text != null) {
-          _streamingText += chunk.text!;
-          notifyListeners();
-        }
+        _streamingText += chunk;
+        notifyListeners();
       }
 
       _messages.add(ChatMessage(
