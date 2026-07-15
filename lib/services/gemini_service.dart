@@ -138,8 +138,10 @@ class GeminiService {
       url = isOpenAI ? 'https://api.openai.com/v1/chat/completions' : 'https://opencode.ai/zen/v1/chat/completions';
       headers = {
         'content-type': 'application/json',
-        'Authorization': 'Bearer ${isOpenAI ? (_openaiApiKey ?? '') : 'free'}',
       };
+      if (isOpenAI) {
+        headers['Authorization'] = 'Bearer ${_openaiApiKey ?? ''}';
+      }
 
       messages.add({
         'role': 'system',

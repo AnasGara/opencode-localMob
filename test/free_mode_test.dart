@@ -128,11 +128,11 @@ void main() {
       final settings = SettingsProvider();
       await settings.loadSettings();
 
-      await settings.setSelectedModel('minimax-m2.5-free');
-      expect(settings.selectedModel, equals('minimax-m2.5-free'));
+      await settings.setSelectedModel('mimo-v2.5-free');
+      expect(settings.selectedModel, equals('mimo-v2.5-free'));
 
       final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getString('selected_model'), equals('minimax-m2.5-free'));
+      expect(prefs.getString('selected_model'), equals('mimo-v2.5-free'));
     });
 
     test('Multiple API keys getters and setters', () async {
