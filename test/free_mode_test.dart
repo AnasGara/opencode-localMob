@@ -90,7 +90,7 @@ void main() {
   });
 
   group('ChatScreen Attachment Button Visibility Tests', () {
-    testWidgets('Shows attachment button only when model is big-pickle', (WidgetTester tester) async {
+    testWidgets('Shows attachment button for supported models and hides for others', (WidgetTester tester) async {
       final settings = SettingsProvider();
       await settings.loadSettings();
       await settings.setSelectedModel('big-pickle');
@@ -111,7 +111,14 @@ void main() {
       // Find attachment button by its tooltip
       expect(find.byTooltip('Upload image/video/doc/photo'), findsOneWidget);
 
-      // Change model to another one
+      // Change model to mimo-v2.5-free
+      await settings.setSelectedModel('mimo-v2.5-free');
+      await tester.pump();
+
+      // The button should still be visible
+      expect(find.byTooltip('Upload image/video/doc/photo'), findsOneWidget);
+
+      // Change model to another one (unsupported)
       await settings.setSelectedModel('deepseek-v4-flash-free');
       await tester.pump();
 
