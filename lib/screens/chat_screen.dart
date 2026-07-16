@@ -417,7 +417,8 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
 
   Widget _buildInputBar(ChatProvider chatProvider) {
     final settingsProvider = Provider.of<SettingsProvider>(context);
-    final isAttachmentSupported = settingsProvider.selectedModel == 'big-pickle';
+    final supportedModels = ['big-pickle', 'mimo-v2.5-free'];
+    final isAttachmentSupported = supportedModels.contains(settingsProvider.selectedModel);
 
     return Container(
       padding: const EdgeInsets.all(8),
