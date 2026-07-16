@@ -5,6 +5,9 @@ import '../providers/chat_provider.dart';
 import '../providers/project_provider.dart';
 import '../models/chat_message.dart';
 import '../services/file_service.dart';
+import 'dart:io';
+import '../providers/settings_provider.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -241,8 +244,181 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
     );
   }
 
+  Future<void> _captureAndSendPhoto() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? photo = await picker.pickImage(source: ImageSource.camera);
+      if (photo != null) {
+        final bytes = await photo.readAsBytes();
+        if (!mounted) return;
+        final name = photo.name;
+        final mimeType = photo.mimeType ?? 'image/jpeg';
+
+        final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+        await chatProvider.sendMessage(
+          text: "",
+          attachedFileName: name,
+          attachedFileBytes: bytes,
+          attachedFileMimeType: mimeType,
+        );
+        _scrollToBottom();
+      }
+    } catch (e) {
+      debugPrint('Error in _captureAndSendPhoto: $e');
+    }
+  }
+
+  Future<void> _pickAndSendPhoto() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        final bytes = await image.readAsBytes();
+        if (!mounted) return;
+        final name = image.name;
+        final extension = name.split('.').last.toLowerCase();
+        String mimeType = image.mimeType ?? 'image/jpeg';
+        if (image.mimeType == null) {
+          switch (extension) {
+            case 'png': mimeType = 'image/png'; break;
+            case 'jpg':
+            case 'jpeg': mimeType = 'image/jpeg'; break;
+            case 'webp': mimeType = 'image/webp'; break;
+            case 'gif': mimeType = 'image/gif'; break;
+          }
+        }
+
+        final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+        await chatProvider.sendMessage(
+          text: "",
+          attachedFileName: name,
+          attachedFileBytes: bytes,
+          attachedFileMimeType: mimeType,
+        );
+        _scrollToBottom();
+      }
+    } catch (e) {
+      debugPrint('Error in _pickAndSendPhoto: $e');
+    }
+  }
+
+  String? _getMimeType(String filePath) {
+    final extension = filePath.split('.').last.toLowerCase();
+    switch (extension) {
+      case 'png': return 'image/png';
+      case 'jpg':
+      case 'jpeg': return 'image/jpeg';
+      case 'webp': return 'image/webp';
+      case 'gif': return 'image/gif';
+      case 'mp4': return 'video/mp4';
+      case 'mov': return 'video/quicktime';
+      case 'webm': return 'video/webm';
+      case 'avi': return 'video/x-msvideo';
+      case 'pdf': return 'application/pdf';
+      case 'txt': return 'text/plain';
+      case 'dart': return 'text/x-dart';
+      case 'yaml': return 'text/x-yaml';
+      case 'json': return 'application/json';
+      default: return null;
+    }
+  }
+
+  bool _isBinaryFile(String filePath) {
+    final mime = _getMimeType(filePath);
+    if (mime == null) return false;
+    return mime.startsWith('image/') || mime.startsWith('video/') || mime == 'application/pdf';
+  }
+
+  Future<void> _pickAndSendFile() async {
+    try {
+      final fileService = FileService();
+      final result = await fileService.pickFile();
+      if (result != null && result.files.isNotEmpty) {
+        final file = result.files.first;
+        if (file.path != null) {
+          final filePath = file.path!;
+          final fileName = FileService.getFileName(filePath);
+
+          final isBinary = _isBinaryFile(filePath);
+          if (isBinary) {
+            final ioFile = File(filePath);
+            final bytes = await ioFile.readAsBytes();
+            if (!mounted) return;
+            final mimeType = _getMimeType(filePath) ?? 'application/octet-stream';
+
+            final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+            await chatProvider.sendMessage(
+              text: "",
+              attachedFileName: fileName,
+              attachedFileBytes: bytes,
+              attachedFileMimeType: mimeType,
+            );
+          } else {
+            final ioFile = File(filePath);
+            final content = await ioFile.readAsString();
+            if (!mounted) return;
+
+            final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+            await chatProvider.sendMessage(
+              text: "",
+              attachedFileName: fileName,
+              attachedFileContent: content,
+            );
+          }
+          _scrollToBottom();
+        }
+      }
+    } catch (e) {
+      debugPrint('Error in _pickAndSendFile: $e');
+    }
+  }
+
+  void _showAttachmentOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt_rounded, color: Colors.deepPurple),
+                title: const Text('Take Photo'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _captureAndSendPhoto();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_rounded, color: Colors.deepPurple),
+                title: const Text('Upload Photo'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _pickAndSendPhoto();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.insert_drive_file_rounded, color: Colors.deepPurple),
+                title: const Text('Upload File'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _pickAndSendFile();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildInputBar(ChatProvider chatProvider) {
-    final projectProvider = Provider.of<ProjectProvider>(context, listen: false);
+    final settingsProvider = Provider.of<SettingsProvider>(context);
+    final isAttachmentSupported = settingsProvider.selectedModel == 'big-pickle';
+
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
@@ -251,13 +427,12 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
       ),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.deepPurple),
-            tooltip: 'Upload image/video/doc',
-            onPressed: () async {
-              await projectProvider.uploadFile();
-            },
-          ),
+          if (isAttachmentSupported)
+            IconButton(
+              icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.deepPurple),
+              tooltip: 'Upload image/video/doc/photo',
+              onPressed: () => _showAttachmentOptions(context),
+            ),
           Expanded(
             child: TextField(
               controller: _inputController,

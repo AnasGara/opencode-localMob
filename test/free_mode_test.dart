@@ -88,4 +88,35 @@ void main() {
       expect(find.text('Bou3orrif'), findsAtLeast(1));
     });
   });
+
+  group('ChatScreen Attachment Button Visibility Tests', () {
+    testWidgets('Shows attachment button only when model is big-pickle', (WidgetTester tester) async {
+      final settings = SettingsProvider();
+      await settings.loadSettings();
+      await settings.setSelectedModel('big-pickle');
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<SettingsProvider>.value(value: settings),
+            ChangeNotifierProvider(create: (_) => ChatProvider()),
+            ChangeNotifierProvider(create: (_) => ProjectProvider()),
+          ],
+          child: const OpenCodeApp(),
+        ),
+      );
+
+      await tester.pump();
+
+      // Find attachment button by its tooltip
+      expect(find.byTooltip('Upload image/video/doc/photo'), findsOneWidget);
+
+      // Change model to another one
+      await settings.setSelectedModel('deepseek-v4-flash-free');
+      await tester.pump();
+
+      // The button should now be hidden
+      expect(find.byTooltip('Upload image/video/doc/photo'), findsNothing);
+    });
+  });
 }
