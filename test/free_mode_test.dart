@@ -55,6 +55,19 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getString('selected_model'), equals('mimo-v2.5-free'));
     });
+
+    test('clearOpenAiApiKey resets OpenAI models and reverts active model to big-pickle if needed', () async {
+      final settings = SettingsProvider();
+      await settings.loadSettings();
+
+      await settings.setSelectedModel('gpt-4o');
+      expect(settings.selectedModel, equals('gpt-4o'));
+
+      await settings.clearOpenAiApiKey();
+      expect(settings.openaiApiKey, isNull);
+      expect(settings.openaiModels, isEmpty);
+      expect(settings.selectedModel, equals('big-pickle'));
+    });
   });
 
   group('ProjectProvider File Upload Tests', () {

@@ -3,13 +3,16 @@ import 'dart:convert';
 
 class OpenCodeService {
   String _modelName = 'big-pickle';
+  String? _openaiApiKey;
 
   bool get isInitialized => true;
 
   void initialize({
     String? modelName,
+    String? openaiApiKey,
   }) {
     _modelName = modelName ?? 'big-pickle';
+    _openaiApiKey = openaiApiKey;
   }
 
   static Future<bool> validateConnection() async {
@@ -38,10 +41,27 @@ class OpenCodeService {
   }
 
   Stream<String> sendMessageStream(List<Map<String, dynamic>> messages) async* {
-    final url = 'https://opencode.ai/zen/v1/chat/completions';
+    final List<String> freeModels = [
+      'big-pickle',
+      'deepseek-v4-flash-free',
+      'mimo-v2.5-free',
+      'hy3-free',
+      'nemotron-3-ultra-free',
+      'north-mini-code-free',
+    ];
+
+    final isFreeModel = freeModels.contains(_modelName);
+    final url = isFreeModel
+        ? 'https://opencode.ai/zen/v1/chat/completions'
+        : 'https://api.openai.com/v1/chat/completions';
+
     final headers = {
-      'content-type': 'application/json',
+      'content-type': 'application/json; charset=utf-8',
     };
+
+    if (!isFreeModel && _openaiApiKey != null && _openaiApiKey!.isNotEmpty) {
+      headers['authorization'] = 'Bearer $_openaiApiKey';
+    }
 
     final systemPrompt = "You are Bou3orrif, a polyvalent, intelligent AI assistant running inside a Flutter mobile app. "
         "Your task is to help the user with any tasks they have, including general knowledge questions, writing, debugging, explaining, and optimizing code. "
@@ -67,7 +87,7 @@ class OpenCodeService {
     final request = await client.postUrl(Uri.parse(url));
     headers.forEach((k, v) => request.headers.set(k, v));
 
-    request.write(jsonEncode(body));
+    request.add(utf8.encode(jsonEncode(body)));
     final response = await request.close();
 
     if (response.statusCode == 200) {
