@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -41,6 +43,28 @@ void main() {
 
       service.initialize();
       expect(service.isInitialized, isTrue);
+    });
+
+    test('UTF-8 request payload containing Arabic, French, and emojis encodes without throwing any exceptions', () async {
+      final service = OpenCodeService();
+      service.initialize();
+
+      final payload = {
+        'model': 'big-pickle',
+        'messages': [
+          {'role': 'user', 'content': 'العربية - Français - English: How are you? 😊'}
+        ]
+      };
+
+      // Ensure we can convert to JSON and encode to UTF-8 without raising any exception
+      final jsonStr = jsonEncode(payload);
+      final encodedBytes = utf8.encode(jsonStr);
+      final decodedStr = utf8.decode(encodedBytes);
+
+      expect(decodedStr, equals(jsonStr));
+      expect(jsonStr.contains('العربية'), isTrue);
+      expect(jsonStr.contains('Français'), isTrue);
+      expect(jsonStr.contains('😊'), isTrue);
     });
   });
 

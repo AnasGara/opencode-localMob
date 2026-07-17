@@ -21,7 +21,7 @@ class OpenCodeService {
       client.connectionTimeout = const Duration(seconds: 5);
       final url = Uri.parse('https://opencode.ai/zen/v1/chat/completions');
       final request = await client.postUrl(url);
-      request.headers.contentType = ContentType.json;
+      request.headers.contentType = ContentType('application', 'json', charset: 'utf-8');
 
       final payload = {
         'model': 'big-pickle',
@@ -31,7 +31,7 @@ class OpenCodeService {
         'stream': false
       };
 
-      request.write(jsonEncode(payload));
+      request.add(utf8.encode(jsonEncode(payload)));
       final response = await request.close();
       client.close();
       return response.statusCode == 200;
