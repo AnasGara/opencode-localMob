@@ -55,6 +55,19 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getString('selected_model'), equals('mimo-v2.5-free'));
     });
+
+    test('clearOpenAiApiKey resets OpenAI models and reverts active model to big-pickle if needed', () async {
+      final settings = SettingsProvider();
+      await settings.loadSettings();
+
+      await settings.setSelectedModel('gpt-4o');
+      expect(settings.selectedModel, equals('gpt-4o'));
+
+      await settings.clearOpenAiApiKey();
+      expect(settings.openaiApiKey, isNull);
+      expect(settings.openaiModels, isEmpty);
+      expect(settings.selectedModel, equals('big-pickle'));
+    });
   });
 
   group('ProjectProvider File Upload Tests', () {
@@ -86,6 +99,44 @@ void main() {
 
       // Verify direct navigation/rendering of home screen (renders Bou3orrif app bar title)
       expect(find.text('Bou3orrif'), findsAtLeast(1));
+    });
+  });
+
+  group('ChatScreen Attachment Button Visibility Tests', () {
+    testWidgets('Shows attachment button for supported models and hides for others', (WidgetTester tester) async {
+      final settings = SettingsProvider();
+      await settings.loadSettings();
+      await settings.setSelectedModel('big-pickle');
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<SettingsProvider>.value(value: settings),
+            ChangeNotifierProvider(create: (_) => ChatProvider()),
+            ChangeNotifierProvider(create: (_) => ProjectProvider()),
+          ],
+          child: const OpenCodeApp(),
+        ),
+      );
+
+      await tester.pump();
+
+      // Find attachment button by its tooltip
+      expect(find.byTooltip('Upload image/video/doc/photo'), findsOneWidget);
+
+      // Change model to mimo-v2.5-free
+      await settings.setSelectedModel('mimo-v2.5-free');
+      await tester.pump();
+
+      // The button should still be visible
+      expect(find.byTooltip('Upload image/video/doc/photo'), findsOneWidget);
+
+      // Change model to another one (unsupported)
+      await settings.setSelectedModel('deepseek-v4-flash-free');
+      await tester.pump();
+
+      // The button should now be hidden
+      expect(find.byTooltip('Upload image/video/doc/photo'), findsNothing);
     });
   });
 }

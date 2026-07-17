@@ -23,6 +23,7 @@ class ChatProvider with ChangeNotifier {
   }) {
     _openCodeService.initialize(
       modelName: modelName,
+      openaiApiKey: openaiApiKey,
     );
   }
 
