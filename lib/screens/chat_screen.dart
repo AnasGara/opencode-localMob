@@ -417,20 +417,8 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
 
   Widget _buildInputBar(ChatProvider chatProvider) {
     final settingsProvider = Provider.of<SettingsProvider>(context);
-    final freeModels = [
-      'big-pickle',
-      'deepseek-v4-flash-free',
-      'mimo-v2.5-free',
-      'hy3-free',
-      'nemotron-3-ultra-free',
-      'north-mini-code-free',
-    ];
-    final currentModel = settingsProvider.selectedModel;
-    final isFreeModel = freeModels.contains(currentModel);
-
-    final isAttachmentSupported = currentModel == 'big-pickle' ||
-        currentModel == 'mimo-v2.5-free' ||
-        !isFreeModel;
+    final supportedModels = ['big-pickle', 'mimo-v2.5-free'];
+    final isAttachmentSupported = supportedModels.contains(settingsProvider.selectedModel);
 
     return Container(
       padding: const EdgeInsets.all(8),
