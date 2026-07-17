@@ -5,7 +5,6 @@ import '../providers/chat_provider.dart';
 import '../providers/project_provider.dart';
 import '../models/chat_message.dart';
 import '../services/file_service.dart';
-import 'dart:io';
 import '../providers/settings_provider.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -254,14 +253,12 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
         final name = photo.name;
         final mimeType = photo.mimeType ?? 'image/jpeg';
 
-        final chatProvider = Provider.of<ChatProvider>(context, listen: false);
-        await chatProvider.sendMessage(
-          text: "",
-          attachedFileName: name,
-          attachedFileBytes: bytes,
-          attachedFileMimeType: mimeType,
+        final projectProvider = Provider.of<ProjectProvider>(context, listen: false);
+        projectProvider.selectFileBytes(
+          bytes: bytes,
+          fileName: name,
+          mimeType: mimeType,
         );
-        _scrollToBottom();
       }
     } catch (e) {
       debugPrint('Error in _captureAndSendPhoto: $e');
@@ -288,86 +285,22 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
           }
         }
 
-        final chatProvider = Provider.of<ChatProvider>(context, listen: false);
-        await chatProvider.sendMessage(
-          text: "",
-          attachedFileName: name,
-          attachedFileBytes: bytes,
-          attachedFileMimeType: mimeType,
+        final projectProvider = Provider.of<ProjectProvider>(context, listen: false);
+        projectProvider.selectFileBytes(
+          bytes: bytes,
+          fileName: name,
+          mimeType: mimeType,
         );
-        _scrollToBottom();
       }
     } catch (e) {
       debugPrint('Error in _pickAndSendPhoto: $e');
     }
   }
 
-  String? _getMimeType(String filePath) {
-    final extension = filePath.split('.').last.toLowerCase();
-    switch (extension) {
-      case 'png': return 'image/png';
-      case 'jpg':
-      case 'jpeg': return 'image/jpeg';
-      case 'webp': return 'image/webp';
-      case 'gif': return 'image/gif';
-      case 'mp4': return 'video/mp4';
-      case 'mov': return 'video/quicktime';
-      case 'webm': return 'video/webm';
-      case 'avi': return 'video/x-msvideo';
-      case 'pdf': return 'application/pdf';
-      case 'txt': return 'text/plain';
-      case 'dart': return 'text/x-dart';
-      case 'yaml': return 'text/x-yaml';
-      case 'json': return 'application/json';
-      default: return null;
-    }
-  }
-
-  bool _isBinaryFile(String filePath) {
-    final mime = _getMimeType(filePath);
-    if (mime == null) return false;
-    return mime.startsWith('image/') || mime.startsWith('video/') || mime == 'application/pdf';
-  }
-
   Future<void> _pickAndSendFile() async {
     try {
-      final fileService = FileService();
-      final result = await fileService.pickFile();
-      if (result != null && result.files.isNotEmpty) {
-        final file = result.files.first;
-        if (file.path != null) {
-          final filePath = file.path!;
-          final fileName = FileService.getFileName(filePath);
-
-          final isBinary = _isBinaryFile(filePath);
-          if (isBinary) {
-            final ioFile = File(filePath);
-            final bytes = await ioFile.readAsBytes();
-            if (!mounted) return;
-            final mimeType = _getMimeType(filePath) ?? 'application/octet-stream';
-
-            final chatProvider = Provider.of<ChatProvider>(context, listen: false);
-            await chatProvider.sendMessage(
-              text: "",
-              attachedFileName: fileName,
-              attachedFileBytes: bytes,
-              attachedFileMimeType: mimeType,
-            );
-          } else {
-            final ioFile = File(filePath);
-            final content = await ioFile.readAsString();
-            if (!mounted) return;
-
-            final chatProvider = Provider.of<ChatProvider>(context, listen: false);
-            await chatProvider.sendMessage(
-              text: "",
-              attachedFileName: fileName,
-              attachedFileContent: content,
-            );
-          }
-          _scrollToBottom();
-        }
-      }
+      final projectProvider = Provider.of<ProjectProvider>(context, listen: false);
+      await projectProvider.uploadFile();
     } catch (e) {
       debugPrint('Error in _pickAndSendFile: $e');
     }
@@ -417,8 +350,20 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
 
   Widget _buildInputBar(ChatProvider chatProvider) {
     final settingsProvider = Provider.of<SettingsProvider>(context);
-    final supportedModels = ['big-pickle', 'mimo-v2.5-free'];
-    final isAttachmentSupported = supportedModels.contains(settingsProvider.selectedModel);
+    final freeModels = [
+      'big-pickle',
+      'deepseek-v4-flash-free',
+      'mimo-v2.5-free',
+      'hy3-free',
+      'nemotron-3-ultra-free',
+      'north-mini-code-free',
+    ];
+    final currentModel = settingsProvider.selectedModel;
+    final isFreeModel = freeModels.contains(currentModel);
+
+    final isAttachmentSupported = currentModel == 'big-pickle' ||
+        currentModel == 'mimo-v2.5-free' ||
+        !isFreeModel;
 
     return Container(
       padding: const EdgeInsets.all(8),

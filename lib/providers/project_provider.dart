@@ -51,6 +51,19 @@ class ProjectProvider with ChangeNotifier {
     }
   }
 
+  void selectFileBytes({
+    required Uint8List bytes,
+    required String fileName,
+    required String mimeType,
+  }) {
+    _selectedFilePath = fileName;
+    _selectedFileBytes = bytes;
+    _selectedFileMimeType = mimeType;
+    _selectedFileContent = "[Attached Media File: $fileName]";
+    _isLoading = false;
+    notifyListeners();
+  }
+
   Future<void> uploadFile() async {
     _isLoading = true;
     notifyListeners();
